@@ -1,0 +1,35 @@
+version: "3.8"
+
+services:
+  caddy:
+    image: caddy:latest
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - ./conf:/etc/caddy
+      - ./site:/srv
+      - caddy_data:/data
+      - caddy_config:/config
+
+  caddy_sidecar:
+    build: ./caddy-sidecar
+    container_name: caddy_sidecar
+    restart: unless-stopped
+    pid: "service:caddy"
+    ports:
+      - "8080:8080"
+    environment:
+      - API_KEY=api-secret-key
+      - ROOT_DIR=/etc/caddy
+      - PORT=8080
+    volumes:
+      - ./caddy:/etc/caddy # mount caddy configuration you want to be able to edit via the sidecar
+    depends_on:
+      - caddy
+
+volumes:
+  caddy_data:
+  caddy_config:
